@@ -1,0 +1,15 @@
+.venv/
+Review_Maker/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+review_generator.db
+*.sqlite
+*.sqlite3
+.mypy_cache/
+.pytest_cache/
+.vscode/
+.idea/
