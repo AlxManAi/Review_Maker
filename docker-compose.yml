@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "8000:8080"
+    environment:
+      - PYTHONPATH=/app
+      - NODE_ENV=production
+    volumes:
+      - ./core:/app/core
+      - ./config:/app/config
+      - ./web:/app/web
+    restart: unless-stopped
