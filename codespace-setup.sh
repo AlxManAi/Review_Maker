@@ -18,6 +18,11 @@ print_command() {
     echo -e "${BLUE}[CMD]${NC} $1"
 }
 
+# Check current directory
+print_status "Current directory: $(pwd)"
+print_status "Listing files:"
+ls -la
+
 # Update pip
 print_status "Updating pip..."
 print_command "pip install --upgrade pip"
@@ -25,17 +30,24 @@ pip install --upgrade pip
 
 # Install FastAPI and dependencies
 print_status "Installing FastAPI and dependencies..."
-print_command "pip install fastapi uvicorn"
-pip install fastapi uvicorn
+print_command "pip install fastapi uvicorn requests"
+pip install fastapi uvicorn requests
 
-# Install additional dependencies if needed
-print_status "Installing additional dependencies..."
-print_command "pip install requests"
-pip install requests
-
-# Go to backend directory
-print_status "Navigating to backend directory..."
-cd web/backend
+# Check if web/backend exists
+if [ -d "web/backend" ]; then
+    print_status "Navigating to backend directory..."
+    cd web/backend
+else
+    print_status "Backend directory not found, checking current directory..."
+    ls -la
+    if [ -d "backend" ]; then
+        cd backend
+    else
+        print_status "Backend directory not found. Creating it..."
+        mkdir -p web/backend
+        cd web/backend
+    fi
+fi
 
 # Run the API
 print_status "Starting FastAPI server..."
