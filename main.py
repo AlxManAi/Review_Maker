@@ -20,13 +20,12 @@ def main():
     except Exception as e:
         print(f"Database error: {e}")
 
-    # Load dark theme stylesheet
-    # Load dark theme stylesheet
+    # Load neon theme stylesheet
     try:
-        with open("styles/dark_theme.qss", "r", encoding="utf-8") as f:
+        with open("styles/neon_theme.qss", "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
     except FileNotFoundError:
-        print("Warning: dark_theme.qss not found, using default style")
+        print("Warning: neon_theme.qss not found, using default style")
     
     print("Creating main window...")
     try:

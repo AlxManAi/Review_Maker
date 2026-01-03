@@ -62,7 +62,28 @@ class GenerateDialog(QDialog):
     
     def init_ui(self):
         self.setWindowTitle("Генерация отзывов")
-        self.setFixedSize(500, 400)
+        self.setFixedSize(500, 450)
+        
+        # Главный стиль для диалога
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1e1e2e;
+                color: #fff;
+            }
+            QGroupBox {
+                color: #fff;
+                border: 1px solid #585b70;
+                border-radius: 6px;
+                margin-top: 10px;
+                padding-top: 10px;
+                font-weight: bold;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
         
         layout = QVBoxLayout()
         
@@ -89,6 +110,36 @@ class GenerateDialog(QDialog):
         self.radio_perplexity.setChecked(True)
         self.radio_mistral = QRadioButton("Mistral (Small)")
         self.radio_deepseek = QRadioButton("DeepSeek (V3)")
+        
+        # Стили для радио кнопок
+        radio_style = """
+            QRadioButton {
+                color: #fff;
+                background-color: #313244;
+                border: 1px solid #585b70;
+                border-radius: 4px;
+                padding: 8px;
+                margin: 2px;
+            }
+            QRadioButton::indicator {
+                width: 16px;
+                height: 16px;
+                border: 2px solid #585b70;
+                border-radius: 8px;
+                background-color: #313244;
+            }
+            QRadioButton::indicator:checked {
+                background-color: #007bff;
+                border: 2px solid #007bff;
+            }
+            QRadioButton::indicator:hover {
+                border: 2px solid #007bff;
+            }
+        """
+        
+        self.radio_perplexity.setStyleSheet(radio_style)
+        self.radio_mistral.setStyleSheet(radio_style)
+        self.radio_deepseek.setStyleSheet(radio_style)
         
         model_layout.addWidget(self.radio_perplexity)
         model_layout.addWidget(self.radio_mistral)

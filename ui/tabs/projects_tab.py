@@ -2,12 +2,13 @@
 Projects Tab - UI for managing projects
 """
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
+    QWidget, QVBoxLayout, QHBoxLayout, 
     QTableWidget, QTableWidgetItem, QHeaderView,
     QDialog, QLabel, QLineEdit, QTextEdit, QFormLayout, QDialogButtonBox,
     QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from ui.components.neon_button import NeonButton
 from core.database import db
 from core.models import Project
 
@@ -28,10 +29,21 @@ class ProjectDialog(QDialog):
     def _setup_ui(self):
         layout = QFormLayout(self)
         
+        # Используем обычные QLineEdit с правильной шириной
         self.name_edit = QLineEdit()
+        self.name_edit.setMinimumWidth(200)
+        self.name_edit.setMaximumWidth(400)
+        
         self.url_edit = QLineEdit()
+        self.url_edit.setMinimumWidth(200)
+        self.url_edit.setMaximumWidth(400)
+        
         self.desc_edit = QTextEdit()
         self.desc_edit.setMaximumHeight(100)
+        self.desc_edit.setMinimumWidth(300)
+        
+        # Загружаем сохраненные размеры полей
+        self._load_field_sizes()
         
         layout.addRow("Название:", self.name_edit)
         layout.addRow("URL сайта:", self.url_edit)
@@ -41,6 +53,36 @@ class ProjectDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addRow(buttons)
+    
+    def _load_field_sizes(self):
+        """Загрузка сохраненных размеров полей"""
+        try:
+            import json
+            import os
+            
+            settings_file = "field_widths.json"
+            settings_path = os.path.join(os.path.dirname(__file__), "..", "..", settings_file)
+            
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    settings = json.load(f)
+                    
+                # Применяем сохраненные размеры для обычных QLineEdit
+                name_id = str(id(self.name_edit))
+                url_id = str(id(self.url_edit))
+                
+                if name_id in settings:
+                    width = settings[name_id]
+                    self.name_edit.setMinimumWidth(width)
+                    self.name_edit.setMaximumWidth(width + 100)  # Небольшой запас
+                    
+                if url_id in settings:
+                    width = settings[url_id]
+                    self.url_edit.setMinimumWidth(width)
+                    self.url_edit.setMaximumWidth(width + 100)  # Небольшой запас
+                    
+        except Exception as e:
+            print(f"Ошибка загрузки размеров полей: {e}")
     
     def _load_project(self):
         self.name_edit.setText(self.project.name)
@@ -70,16 +112,14 @@ class ProjectsTab(QWidget):
         
         # Toolbar with consistent button styling
         toolbar = QHBoxLayout()
-        button_style = "padding: 5px 15px;"
         
-        self.new_btn = QPushButton("Новый проект")
+        # Neon кнопки с цветовой схемой "Лед и Пламя"
+        self.new_btn = NeonButton("Новый проект", "primary")  # Ледяной синий
         self.new_btn.clicked.connect(self.create_project)
-        self.new_btn.setStyleSheet(button_style)
         toolbar.addWidget(self.new_btn)
         
-        self.delete_btn = QPushButton("Удалить")
+        self.delete_btn = NeonButton("Удалить", "secondary")  # Оранжевый
         self.delete_btn.clicked.connect(self.delete_project)
-        self.delete_btn.setStyleSheet("background-color: #dc3545; color: white; " + button_style)
         toolbar.addWidget(self.delete_btn)
         
         toolbar.addStretch()
@@ -89,13 +129,36 @@ class ProjectsTab(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["ID", "Название", "URL сайта", "Создан"])
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        
+        # Установка регуляторов как в товарах
+        self.table.setColumnWidth(0, 50)   # ID - узкая
+        self.table.setColumnWidth(1, 200)  # Название - начальная ширина
+        self.table.setColumnWidth(2, 250)  # URL - начальная ширина
+        self.table.setColumnWidth(3, 150)  # Создан - начальная ширина
+        
+        # Регуляторы для всех колонок кроме ID
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)      # ID - фиксированная
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Interactive) # Название - интерактивная
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Interactive) # URL - интерактивная
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive) # Создан - интерактивная
+        
+        # Соединяем сигнал изменения размеров с сохранением
+        self.table.horizontalHeader().sectionResized.connect(self._save_column_sizes)
+        
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.doubleClicked.connect(self.open_project)
         layout.addWidget(self.table)
     
     def load_projects(self):
         self.table.setRowCount(0)
+        
+        # Устанавливаем высоту строк: шрифт 14px + 4px = 18px
+        self.table.verticalHeader().setDefaultSectionSize(18)
+        self.table.verticalHeader().setMinimumSectionSize(18)
+        
+        # Загружаем сохраненные размеры колонок
+        self._load_column_sizes()
+        
         with db.get_session() as session:
             projects = session.query(Project).order_by(Project.created_at.desc()).all()
             for project in projects:
@@ -105,6 +168,69 @@ class ProjectsTab(QWidget):
                 self.table.setItem(row, 1, QTableWidgetItem(project.name))
                 self.table.setItem(row, 2, QTableWidgetItem(project.site_url))
                 self.table.setItem(row, 3, QTableWidgetItem(project.created_at.strftime("%Y-%m-%d %H:%M")))
+    
+    def _load_column_sizes(self):
+        """Загрузка сохраненных размеров колонок"""
+        try:
+            import json
+            import os
+            
+            settings_file = "column_widths.json"
+            settings_path = os.path.join(os.path.dirname(__file__), "..", "..", settings_file)
+            
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    settings = json.load(f)
+                
+                # Применяем сохраненные размеры для колонок проектов
+                table_key = "projects_table"
+                if table_key in settings:
+                    sizes = settings[table_key]
+                    if "name" in sizes:
+                        self.table.setColumnWidth(1, sizes["name"])
+                    if "url" in sizes:
+                        self.table.setColumnWidth(2, sizes["url"])
+                    if "created" in sizes:
+                        self.table.setColumnWidth(3, sizes["created"])
+                        
+        except Exception as e:
+            print(f"Ошибка загрузки размеров колонок: {e}")
+    
+    def _save_column_sizes(self):
+        """Сохранение размеров колонок"""
+        try:
+            import json
+            import os
+            
+            settings_file = "column_widths.json"
+            settings_path = os.path.join(os.path.dirname(__file__), "..", "..", settings_file)
+            
+            # Загружаем существующие настройки
+            settings = {}
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    settings = json.load(f)
+            
+            # Сохраняем размеры колонок проектов
+            table_key = "projects_table"
+            settings[table_key] = {
+                "name": self.table.columnWidth(1),
+                "url": self.table.columnWidth(2),
+                "created": self.table.columnWidth(3)
+            }
+            
+            # Записываем настройки
+            with open(settings_path, 'w') as f:
+                json.dump(settings, f, indent=2)
+                
+        except Exception as e:
+            print(f"Ошибка сохранения размеров колонок: {e}")
+    
+    def resizeEvent(self, event):
+        """Сохранение размеров колонок при изменении размера"""
+        super().resizeEvent(event)
+        # Сохраняем размеры колонок при изменении размера таблицы
+        self._save_column_sizes()
     
     def create_project(self):
         dialog = ProjectDialog(parent=self)

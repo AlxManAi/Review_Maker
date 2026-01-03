@@ -1,8 +1,7 @@
 """
 Generator Engine - Powered by Mistral API
 """
-from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage
+from mistralai import Mistral
 from config.settings import settings
 from typing import Dict, List
 import json
@@ -18,8 +17,37 @@ class GeneratorEngine:
         if not self.api_key:
             print("Warning: MISTRAL_API_KEY is not set.")
         else:
-            self.client = MistralClient(api_key=self.api_key)
+            self.client = Mistral(api_key=self.api_key)
     
+    def _get_few_shot_examples(self, limit: int = 3) -> str:
+        """Fetch approved reviews to use as style examples."""
+        try:
+            from core.database import db
+            from core.models import Review
+            
+            examples_text = ""
+            with db.get_session() as session:
+                # Get last approved reviews
+                examples = session.query(Review).filter_by(is_approved=True).order_by(Review.id.desc()).limit(limit).all()
+                
+                if not examples:
+                    return ""
+                
+                examples_text = "\nHere are examples of GOOD reviews (copy their style, length, and tone):\n"
+                for i, ex in enumerate(examples, 1):
+                    examples_text += f"""
+                    Example {i}:
+                    Author: {ex.author}
+                    Rating: {ex.rating}
+                    Pros: {ex.pros}
+                    Cons: {ex.cons}
+                    Review: {ex.content}
+                    """
+            return examples_text
+        except Exception as e:
+            print(f"Error fetching examples: {e}")
+            return ""
+
     def generate_draft(self, product_info: str, count: int = 1) -> List[Dict]:
         """
         Generate draft reviews based on product info.
@@ -34,11 +62,16 @@ class GeneratorEngine:
         if not self.api_key:
             return [{"error": "Mistral API key missing"}]
             
+        # Get few-shot examples
+        examples_section = self._get_few_shot_examples(limit=3)
+            
         prompt = f"""
         Based on the following product information, generate {count} UNIQUE draft reviews.
         
         Product Info:
         {product_info}
+        
+        {examples_section}
         
         Requirements:
         1. "author": A realistic Russian name.
@@ -51,11 +84,11 @@ class GeneratorEngine:
         """
         
         try:
-            chat_response = self.client.chat(
+            chat_response = self.client.chat.complete(
                 model="mistral-large-latest",
                 messages=[
-                    ChatMessage(role="system", content="You are a creative copywriter generating authentic product reviews."),
-                    ChatMessage(role="user", content=prompt)
+                    {"role": "system", "content": "You are a creative copywriter generating authentic product reviews."},
+                    {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"}
             )

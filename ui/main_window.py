@@ -13,6 +13,7 @@ from ui.tabs.projects_tab import ProjectsTab
 from ui.tabs.periods_tab import PeriodsTab
 from ui.widgets.work_area import WorkArea
 from ui.dialogs.settings_dialog import SettingsDialog
+from ui.dialogs.logging_settings_dialog import LoggingSettingsDialog
 
 class MainWindow(QMainWindow):
     """Main application window with hierarchical navigation."""
@@ -73,6 +74,15 @@ class MainWindow(QMainWindow):
         settings_action.triggered.connect(self.open_settings)
         file_menu.addAction(settings_action)
         
+        # Разделитель
+        file_menu.addSeparator()
+        
+        logging_action = QAction("Настройки логирования", self)
+        logging_action.triggered.connect(self.open_logging_settings)
+        file_menu.addAction(logging_action)
+        
+        file_menu.addSeparator()
+        
         exit_action = QAction("Выход", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
@@ -104,4 +114,9 @@ class MainWindow(QMainWindow):
     def open_settings(self):
         """Open Settings Dialog."""
         dialog = SettingsDialog(self)
+        dialog.exec()
+    
+    def open_logging_settings(self):
+        """Open Logging Settings Dialog."""
+        dialog = LoggingSettingsDialog(self)
         dialog.exec()

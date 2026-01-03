@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Generator Web</title>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --bg-dark: #0a0a0c;
+            --card-bg: #16161a;
+            --text-main: #e0e0e0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            padding: 2rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(0, 243, 255, 0.1) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--neon-blue);
+            opacity: 0.5;
+        }
+
+        .loading {
+            margin-top: 2rem;
+            color: var(--neon-blue);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Review Generator <span style="font-size: 0.5em; vertical-align: middle;">Web Alpha</span></h1>
+    </header>
+
+    <div class="loading" id="loader">Загрузка данных из API...</div>
+
+    <div class="container" id="app">
+        <!-- Сюда JS отрисует проекты -->
+    </div>
+
+    <script>
+        async function loadProjects() {
+            try {
+                // Временно используем заглушку, пока API не запущено в облаке
+                const app = document.getElementById('app');
+                const loader = document.getElementById('loader');
+                
+                // Эмуляция запроса к нашему FastAPI
+                // const response = await fetch('/api/projects');
+                // const projects = await response.json();
+                
+                const projects = [
+                    { name: "Демо Проект", site_url: "example.com", description: "Это превью того, как будет выглядеть веб-интерфейс" }
+                ];
+
+                loader.style.display = 'none';
+                app.innerHTML = projects.map(p => `
+                    <div class="card">
+                        <h3>${p.name}</h3>
+                        <p style="color: #888; font-size: 0.9em;">${p.site_url}</p>
+                        <p>${p.description}</p>
+                        <button style="background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                            Открыть периоды
+                        </button>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                document.getElementById('loader').innerText = "Ошибка подключения к API. Убедитесь, что сервер запущен.";
+            }
+        }
+
+        loadProjects();
+    </script>
+</body>
+</html>

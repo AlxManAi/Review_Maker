@@ -3,7 +3,8 @@ Settings Dialog - Диалог настроек приложения
 """
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QGroupBox, QFormLayout, 
-    QLineEdit, QDialogButtonBox, QLabel, QMessageBox
+    QLineEdit, QDialogButtonBox, QLabel, QMessageBox,
+    QTextEdit, QComboBox
 )
 import json
 import os
@@ -43,8 +44,31 @@ class SettingsDialog(QDialog):
         keys_group.setLayout(keys_layout)
         layout.addWidget(keys_group)
         
+        # Prompts Group
+        prompts_group = QGroupBox("Промпты для генерации")
+        prompts_layout = QFormLayout()
+        
+        # Default model
+        self.default_model = QComboBox()
+        self.default_model.addItems(["perplexity", "mistral", "deepseek"])
+        prompts_layout.addRow("Модель по умолчанию:", self.default_model)
+        
+        # Review generation prompt
+        self.review_prompt = QTextEdit()
+        self.review_prompt.setMinimumHeight(200)
+        self.review_prompt.setPlaceholderText("Введите промпт для генерации отзывов...")
+        prompts_layout.addRow("Промпт генерации отзывов:", self.review_prompt)
+        
+        # Prompt info
+        prompt_info = QLabel("Доступные переменные: {product_name}, {examples_section}, {count}")
+        prompt_info.setStyleSheet("color: #888; font-size: 11px;")
+        prompts_layout.addRow(prompt_info)
+        
+        prompts_group.setLayout(prompts_layout)
+        layout.addWidget(prompts_group)
+        
         # Keys Info
-        info_label = QLabel("Ключи сохраняются в файл .env в корне проекта")
+        info_label = QLabel("Ключи сохраняются в файл .env, промпты в config/prompts.json")
         info_label.setStyleSheet("color: #888; font-size: 11px;")
         layout.addWidget(info_label)
         
@@ -63,19 +87,28 @@ class SettingsDialog(QDialog):
         from dotenv import load_dotenv
         load_dotenv()
         
+        # Load API keys
         self.perplexity_key.setText(os.getenv("PERPLEXITY_API_KEY", ""))
         self.mistral_key.setText(os.getenv("MISTRAL_API_KEY", ""))
         self.deepseek_key.setText(os.getenv("DEEPSEEK_API_KEY", ""))
         
+        # Load prompts
+        try:
+            with open("config/prompts.json", "r", encoding="utf-8") as f:
+                prompts = json.load(f)
+                self.review_prompt.setPlainText(prompts.get("review_generation", ""))
+                self.default_model.setCurrentText(prompts.get("default_model", "perplexity"))
+        except Exception as e:
+            print(f"Ошибка загрузки промптов: {e}")
+        
     def save_settings(self):
         """Сохранить настройки."""
+        # Save API keys
         env_content = ""
         
-        # Читаем существующий
         try:
             with open(".env", "r", encoding="utf-8") as f:
                 lines = f.readlines()
-                # Простой парсинг для сохранения других переменных если есть
                 env_map = {}
                 for line in lines:
                     if "=" in line:
@@ -84,22 +117,36 @@ class SettingsDialog(QDialog):
         except FileNotFoundError:
             env_map = {}
             
-        # Обновляем
         env_map["PERPLEXITY_API_KEY"] = self.perplexity_key.text()
         env_map["MISTRAL_API_KEY"] = self.mistral_key.text()
         env_map["DEEPSEEK_API_KEY"] = self.deepseek_key.text()
         
-        # Записываем
         with open(".env", "w", encoding="utf-8") as f:
             for k, v in env_map.items():
                 f.write(f"{k}={v}\n")
                 
-        # Перезагружаем переменные окружения
         os.environ["PERPLEXITY_API_KEY"] = self.perplexity_key.text()
         os.environ["MISTRAL_API_KEY"] = self.mistral_key.text()
         os.environ["DEEPSEEK_API_KEY"] = self.deepseek_key.text()
         
-        # Переинициализация AI сервиса чтобы подхватил новые ключи
+        # Save prompts
+        try:
+            prompts = {
+                "review_generation": self.review_prompt.toPlainText(),
+                "default_model": self.default_model.currentText()
+            }
+            
+            # Create config directory if not exists
+            os.makedirs("config", exist_ok=True)
+            
+            with open("config/prompts.json", "w", encoding="utf-8") as f:
+                json.dump(prompts, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения промптов: {e}")
+            return
+                
+        # Reinitialize AI service
         from core.ai_service import ai_service
         ai_service.__init__()
         

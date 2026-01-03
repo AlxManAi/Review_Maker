@@ -2,13 +2,15 @@
 Periods Tab - UI for managing periods within a project
 """
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
+    QWidget, QVBoxLayout, QHBoxLayout, 
     QTableWidget, QTableWidgetItem, QHeaderView,
-    QDialog, QLabel, QDateEdit, QFormLayout, QDialogButtonBox,
-    QMessageBox
+    QDialog, QLabel, QFormLayout, QDialogButtonBox,
+    QDateEdit, QSpinBox, QMessageBox
 )
 from PyQt6.QtCore import Qt, QDate, pyqtSignal
 from datetime import datetime, timedelta
+from ui.components.neon_button import NeonButton
+from ui.components.resizable_widget import ResizableLineEdit
 from core.database import db
 from core.models import Period
 
@@ -125,32 +127,29 @@ class PeriodsTab(QWidget):
         # Toolbar
         toolbar = QHBoxLayout()
         
-        self.back_btn = QPushButton("← К проектам")
+        # Neon кнопки с цветовой схемой "Лед и Пламя"
+        self.back_btn = NeonButton("← К проектам", "secondary")  # Оранжевый
         self.back_btn.clicked.connect(lambda: self.back_to_projects() if self.back_to_projects else None)
         toolbar.addWidget(self.back_btn)
         
-        self.open_btn = QPushButton("Открыть")
+        self.open_btn = NeonButton("Открыть", "suggested")  # Золотой - рекомендуемое действие
         self.open_btn.clicked.connect(self.open_period)
         self.open_btn.setEnabled(False)
-        self.open_btn.setStyleSheet("background-color: #28a745; color: white; padding: 5px 15px;")
         toolbar.addWidget(self.open_btn)
         
-        self.add_btn = QPushButton("Добавить период")
+        self.add_btn = NeonButton("Добавить период", "primary")  # Ледяной синий
         self.add_btn.clicked.connect(self.create_period)
         self.add_btn.setEnabled(False)
-        self.add_btn.setStyleSheet("background-color: #007bff; color: white; padding: 5px 15px;")
         toolbar.addWidget(self.add_btn)
         
-        self.edit_btn = QPushButton("Редактировать")
+        self.edit_btn = NeonButton("Редактировать", "secondary")  # Оранжевый
         self.edit_btn.clicked.connect(self.edit_period)
         self.edit_btn.setEnabled(False)
-        self.edit_btn.setStyleSheet("padding: 5px 15px;")
         toolbar.addWidget(self.edit_btn)
         
-        self.delete_btn = QPushButton("Удалить период")
+        self.delete_btn = NeonButton("Удалить период", "secondary")  # Оранжевый
         self.delete_btn.clicked.connect(self.delete_period)
         self.delete_btn.setEnabled(False)
-        self.delete_btn.setStyleSheet("background-color: #dc3545; color: white; padding: 5px 15px;")
         toolbar.addWidget(self.delete_btn)
         
         toolbar.addStretch()
@@ -183,6 +182,10 @@ class PeriodsTab(QWidget):
         self.table.setRowCount(0)
         if not self.current_project_id:
             return
+        
+        # Устанавливаем высоту строк: шрифт 14px + 4px = 18px
+        self.table.verticalHeader().setDefaultSectionSize(18)
+        self.table.verticalHeader().setMinimumSectionSize(18)
         
         with db.get_session() as session:
             periods = session.query(Period).filter_by(project_id=self.current_project_id).order_by(Period.created_at.desc()).all()

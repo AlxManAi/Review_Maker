@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False)
     
     # Database
-    database_url: str = Field(default="sqlite:///review_generator.db")
+    database_url: str = Field(default="sqlite:////mnt/data/review_generator.db")
     
     # API Keys
     openai_api_key: str = Field(default="")

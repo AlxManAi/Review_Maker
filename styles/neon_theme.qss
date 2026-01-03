@@ -1,0 +1,241 @@
+/* ФИНАЛЬНОЕ единообразие ВСЕХ элементов - шрифт 14px, высота 18px */
+
+QMainWindow {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
+                stop:0 #1e1e2e, stop:1 #181825);
+    color: #cdd6f4;
+}
+
+QWidget {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Улучшенное меню */
+QMenuBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #181825, stop:1 #11111b);
+    color: #cdd6f4;
+    border-bottom: 2px solid #313244;
+    padding: 4px;  /* Уменьшенные отступы */
+    min-height: 18px;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 4px 12px;  /* Уменьшенные отступы */
+    border-radius: 4px;
+    margin: 1px;
+    min-height: 18px;
+}
+
+QMenuBar::item:selected {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #45475a, stop:1 #585b70);
+    border: 1px solid #4682B4;
+}
+
+QMenu {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #1e1e2e, stop:1 #181825);
+    border: 1px solid #4682B4;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 16px;
+    border-radius: 4px;
+    margin: 1px;
+    min-height: 18px;
+}
+
+QMenu::item:selected {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #0000FF, stop:1 #4682B4);
+    color: #FFFFFF;
+}
+
+/* Улучшенные вкладки с правильной высотой */
+QTabWidget::pane {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #1e1e2e, stop:1 #181825);
+    border: 1px solid #313244;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QTabBar::tab {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #181825, stop:1 #11111b);
+    color: #6c7086;
+    padding: 4px 12px;  /* Уменьшенные отступы */
+    margin-right: 2px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border: 1px solid #313244;
+    border-bottom: none;
+    min-height: 18px;
+}
+
+QTabBar::tab:selected {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #0000FF, stop:1 #4682B4);
+    color: #FFFFFF;
+    border-color: #4682B4;
+}
+
+QTabBar::tab:hover:!selected {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #45475a, stop:1 #585b70);
+    color: #cdd6f4;
+    border-color: #4682B4;
+}
+
+/* Поля ввода с правильной высотой: шрифт 14px + 4px = 18px */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #313244, stop:1 #1e1e2e);
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 2px 6px;
+    selection-background-color: #0000FF;
+    selection-color: #FFFFFF;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    min-height: 18px;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border-color: #0000FF;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #1e1e2e, stop:1 #181825);
+}
+
+/* Простые чекбоксы с правильными размерами */
+QCheckBox {
+    spacing: 4px;
+    color: #cdd6f4;
+    font-size: 14px;
+}
+
+QCheckBox::indicator {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #585b70;
+    background-color: #313244;
+    border-radius: 2px;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #0000FF;
+    border-color: #0000FF;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #4682B4;
+}
+
+/* Улучшенные прогресс бары */
+QProgressBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #313244, stop:1 #1e1e2e);
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    text-align: center;
+    color: #cdd6f4;
+    font-weight: 600;
+    height: 18px;
+}
+
+QProgressBar::chunk {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #0000FF, stop:1 #4682B4);
+    border-radius: 4px;
+    margin: 1px;
+}
+
+/* Таблицы с правильной высотой строк: шрифт 14px + 4px = 18px */
+QTableWidget, QTableView {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #1e1e2e, stop:1 #181825);
+    alternate-background-color: #11111b;
+    color: #cdd6f4;
+    border: 1px solid #313244;
+    border-radius: 8px;
+    gridline-color: #313244;
+}
+
+QTableWidget::item, QTableView::item {
+    padding: 4px;
+    border-bottom: 1px solid #313244;
+    height: 18px;
+}
+
+QTableWidget::item:selected, QTableView::item:selected {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #0000FF, stop:1 #4682B4);
+    color: #FFFFFF;
+}
+
+QHeaderView::section {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #181825, stop:1 #11111b);
+    color: #cdd6f4;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #0000FF;
+    font-weight: 600;
+    font-size: 14px;
+    height: 18px;
+}
+
+/* Labels */
+QLabel {
+    color: #cdd6f4;
+    background-color: transparent;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Tooltips с неоновым эффектом */
+QToolTip {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #313244, stop:1 #1e1e2e);
+    color: #cdd6f4;
+    border: 1px solid #0000FF;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Scroll bars */
+QScrollBar:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #181825, stop:1 #11111b);
+    width: 12px;
+    border-radius: 6px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #45475a, stop:1 #585b70);
+    border-radius: 6px;
+    min-height: 20px;
+    border: 1px solid #313244;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #585b70, stop:1 #6c7086);
+    border-color: #0000FF;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}

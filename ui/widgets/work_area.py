@@ -3,10 +3,11 @@ Work Area - Рабочая зона для работы с периодом
 """
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QTabWidget, QPushButton
+    QTabWidget
 )
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
+from ui.components.neon_button import NeonButton
 from ui.tabs.products_tab import ProductsTab
 from ui.tabs.generated_reviews_tab import GeneratedReviewsTab
 
@@ -30,11 +31,17 @@ class WorkArea(QWidget):
             # Header
             header = QHBoxLayout()
             
-            self.back_btn = QPushButton("← Назад к периодам")
+            self.back_btn = NeonButton("← Назад к периодам", "secondary")
             self.back_btn.clicked.connect(self.back_to_periods.emit)
-            self.back_btn.setStyleSheet("padding: 5px 15px; font-weight: bold;")
-            self.back_btn.setFixedWidth(150)
+            self.back_btn.setMinimumWidth(180)
+            
+            # Добавляем кнопку для перехода к отзывам с умной активностью
+            self.reviews_btn = NeonButton("📅 Календарь отзывов", "suggested")
+            self.reviews_btn.clicked.connect(self.go_to_reviews)
+            self.reviews_btn.setMinimumWidth(180)
+            
             header.addWidget(self.back_btn)
+            header.addWidget(self.reviews_btn)
             
             self.title_label = QLabel("Период #...")
             self.title_label.setStyleSheet("font-size: 16px; font-weight: bold; margin-left: 10px;")
@@ -89,6 +96,49 @@ class WorkArea(QWidget):
         self.tabs.setCurrentIndex(0)
 
     def on_tab_changed(self, index):
-        """При переключении вкладок обновлять данные."""
+        """При переключении вкладок обновлять данные и умную активность."""
         if index == 1: # Календарь
             self.reviews_tab.load_reviews()
+            # Останавливаем пульсацию кнопки отзывов при активации вкладки
+            self.reviews_btn.stop_pulsing()
+            self.reviews_btn.set_suggested(False)
+        elif index == 0: # Товары
+            # Принудительно применяем стили к таблице товаров
+            if hasattr(self.products_tab, 'table'):
+                self.products_tab.table.setStyleSheet("""
+                    QTableWidget {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                    stop:0 #1e1e2e, stop:1 #181825);
+                        alternate-background-color: #11111b;
+                        color: #cdd6f4;
+                        border: 1px solid #313244;
+                        border-radius: 8px;
+                        gridline-color: #313244;
+                    }
+                    QTableWidget::item {
+                        padding: 4px;
+                        border-bottom: 1px solid #313244;
+                        height: 18px;
+                    }
+                """)
+        
+        # Обновляем умную активность
+        self._update_smart_activity()
+    
+    def go_to_reviews(self):
+        """Переход к вкладке отзывов"""
+        self.tabs.setCurrentIndex(1)  # Индекс вкладки отзывов
+    
+    def _update_smart_activity(self):
+        """Обновление умной активности на основе контекста"""
+        # Если есть товары и активна вкладка товаров, предлагаем перейти к отзывам
+        if self.tabs.currentIndex() == 0:  # Вкладка товаров
+            # Проверяем наличие товаров
+            if hasattr(self.products_tab, 'table') and self.products_tab.table.rowCount() > 0:
+                # Есть товары - предлагаем перейти к отзывам
+                self.reviews_btn.set_suggested(True)
+            else:
+                self.reviews_btn.set_suggested(False)
+        else:
+            # Вкладка отзывов активна - не подсвечиваем
+            self.reviews_btn.set_suggested(False)

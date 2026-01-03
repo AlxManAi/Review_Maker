@@ -1,5 +1,5 @@
 """
-Parser Service - Service for parsing reviews from product pages
+Parser Service - Optimized service for parsing reviews from product pages
 """
 import re
 import requests
@@ -9,6 +9,8 @@ from datetime import datetime
 from urllib.parse import urljoin, urlparse
 from core.database import db
 from core.models import ReviewExample, ProductTask, Project
+from core.logger import app_logger
+import traceback
 
 
 class ParserService:
@@ -95,7 +97,6 @@ class ParserService:
                 
             except Exception as e:
                 print(f"Exception during parsing: {e}")
-                import traceback
                 traceback.print_exc()
 
                 product_task.parse_status = "failed"
@@ -147,60 +148,104 @@ class ParserService:
         Returns:
             List of review dictionaries
         """
+        app_logger.info(f"=== НАЧАЛО ПАРСИНГА СТРАНИЦЫ ===")
+        app_logger.info(f"URL: {url}")
+        
         try:
+            app_logger.info("Загрузка страницы...")
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
+            app_logger.info(f"Страница загружена, статус: {response.status_code}")
+            app_logger.info(f"Длина контента: {len(response.content)}")
             
+            app_logger.info("Парсинг HTML...")
             soup = BeautifulSoup(response.content, 'lxml')
+            app_logger.info("HTML успешно распарсен")
+            
             reviews = []
             
             # Strategy 1: Look for schema.org markup (often hidden but contains structured data)
-            schema_reviews = soup.find_all(
-                ['div', 'article'],
-                attrs={'itemprop': 'review'}
-            )
-            
-            if schema_reviews:
-                print(f"Found {len(schema_reviews)} schema.org reviews")
-                for element in schema_reviews:
-                    review_data = self._extract_schema_review(element)
-                    if review_data and review_data.get('content'):
-                        reviews.append(review_data)
+            app_logger.info("Стратегия 1: поиск schema.org отзывов...")
+            try:
+                schema_reviews = soup.find_all(
+                    ['div', 'article'],
+                    attrs={'itemprop': 'review'}
+                )
+                app_logger.info(f"Найдено schema.org отзывов: {len(schema_reviews)}")
+                
+                if schema_reviews:
+                    for i, element in enumerate(schema_reviews):
+                        app_logger.info(f"Обработка schema.org отзыва {i+1}...")
+                        try:
+                            review_data = self._extract_schema_review(element)
+                            if review_data and review_data.get('content'):
+                                reviews.append(review_data)
+                                app_logger.info(f"Отзыв {i+1} добавлен")
+                            else:
+                                app_logger.info(f"Отзыв {i+1} пропущен (нет контента)")
+                        except Exception as e:
+                            app_logger.error(f"Ошибка обработки schema.org отзыва {i+1}: {e}")
+                            continue
+            except Exception as e:
+                app_logger.error(f"Ошибка в стратегии 1: {e}")
             
             # Strategy 2: Look for elements with "review" in class or id (visible reviews)
             if not reviews:
-                review_elements = soup.find_all(
-                    ['div', 'article', 'section'],
-                    class_=re.compile(r'review|отзыв', re.IGNORECASE)
-                )
-                
-                for element in review_elements:
-                    # Skip hidden elements
-                    if 'hidden' in element.get('class', []):
-                        continue
-                    review_data = self._extract_review_data(element)
-                    if review_data and review_data.get('content'):
-                        reviews.append(review_data)
+                app_logger.info("Стратегия 2: поиск отзывов по классам...")
+                try:
+                    review_elements = soup.find_all(
+                        ['div', 'article', 'section'],
+                        class_=re.compile(r'review|отзыв', re.IGNORECASE)
+                    )
+                    app_logger.info(f"Найдено элементов с review/отзыв: {len(review_elements)}")
+                    
+                    for i, element in enumerate(review_elements):
+                        # Skip hidden elements
+                        if 'hidden' in element.get('class', []):
+                            continue
+                        try:
+                            review_data = self._extract_review_data(element)
+                            if review_data and review_data.get('content'):
+                                reviews.append(review_data)
+                                app_logger.info(f"Отзыв {i+1} добавлен (стратегия 2)")
+                        except Exception as e:
+                            app_logger.error(f"Ошибка обработки отзыва {i+1} (стратегия 2): {e}")
+                            continue
+                except Exception as e:
+                    app_logger.error(f"Ошибка в стратегии 2: {e}")
             
             # Strategy 3: Look for elements with data-review or similar attributes
             if not reviews:
-                review_elements = soup.find_all(
-                    ['div', 'article'],
-                    attrs={'data-review': True}
-                )
-                
-                for element in review_elements:
-                    review_data = self._extract_review_data(element)
-                    if review_data and review_data.get('content'):
-                        reviews.append(review_data)
+                app_logger.info("Стратегия 3: поиск data-review...")
+                try:
+                    review_elements = soup.find_all(
+                        ['div', 'article'],
+                        attrs={'data-review': True}
+                    )
+                    app_logger.info(f"Найдено data-review элементов: {len(review_elements)}")
+                    
+                    for i, element in enumerate(review_elements):
+                        try:
+                            review_data = self._extract_review_data(element)
+                            if review_data and review_data.get('content'):
+                                reviews.append(review_data)
+                                app_logger.info(f"Отзыв {i+1} добавлен (стратегия 3)")
+                        except Exception as e:
+                            app_logger.error(f"Ошибка обработки отзыва {i+1} (стратегия 3): {e}")
+                            continue
+                except Exception as e:
+                    app_logger.error(f"Ошибка в стратегии 3: {e}")
             
-            print(f"Total reviews extracted: {len(reviews)}")
+            app_logger.info(f"=== ПАРСИНГ ЗАВЕРШЕН ===")
+            app_logger.info(f"Всего извлечено отзывов: {len(reviews)}")
             return reviews
             
         except Exception as e:
-            print(f"Error parsing page {url}: {e}")
-            import traceback
-            traceback.print_exc()
+            app_logger.error(f"!!! КРАШ ПАРСИНГА СТРАНИЦЫ !!!")
+            app_logger.error(f"URL: {url}")
+            app_logger.error(f"Ошибка: {e}")
+            app_logger.error(f"Тип ошибки: {type(e)}")
+            app_logger.exception("Full traceback:")
             return []
     
     def _extract_schema_review(self, element) -> Optional[Dict]:
