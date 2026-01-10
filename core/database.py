@@ -17,7 +17,7 @@ class Database:
         self.database_url = database_url or settings.database_url
         self.engine = create_engine(
             self.database_url,
-            echo=settings.debug,
+            echo=settings.db_echo,
             connect_args={"check_same_thread": False} if "sqlite" in self.database_url else {}
         )
         self.SessionLocal = sessionmaker(

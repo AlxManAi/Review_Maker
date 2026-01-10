@@ -684,10 +684,11 @@ class GeneratedReviewsTab(QWidget):
                 is_generated=True
             ).all()
             
-            # Предварительное распределение
+            # Предварительное распределение (только если есть нераспределённые)
             reviews_without_date = [r for r in reviews if not r.target_date]
             if reviews_without_date:
                 self._distribute_reviews_logic(session, reviews_without_date, self.period_start, self.period_end)
+                # Повторный запрос только если были распределения
                 reviews = session.query(Review).filter_by(
                     period_id=self.current_period_id,
                     is_generated=True

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "Review Generator"
     debug: bool = Field(default=False)
+    db_echo: bool = Field(default=False)
     
     # Database
     database_url: str = Field(default="sqlite:///review_generator.db")

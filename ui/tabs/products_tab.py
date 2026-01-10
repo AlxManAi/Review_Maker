@@ -453,7 +453,7 @@ class ProductsTab(QWidget):
             session.add(product)
             session.commit()
         
-        # Reload all products to avoid detached instance issues
+        # Reload only if needed to avoid heavy refreshes
         self.load_products()
     
     def delete_products(self):
@@ -660,7 +660,8 @@ class ProductsTab(QWidget):
                 session.commit()
         except Exception as e:
             QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {str(e)}")
-            self.load_products()  # Reload to reset values
+            # Reload only on error to reset values
+            self.load_products()
         
         # Update validation after changing review count
         self.update_validation()

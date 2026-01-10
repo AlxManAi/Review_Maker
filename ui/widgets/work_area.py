@@ -101,7 +101,9 @@ class WorkArea(QWidget):
             else:
                 self.reviews_tab.load_reviews()
         elif index == 0: # Товары
-            self.products_tab.load_products()
+            # Load only if not already loaded to avoid unnecessary refreshes
+            if not self.products_tab.table.rowCount():
+                self.products_tab.load_products()
         
         # Обновляем умную активность
         self._update_smart_activity()
